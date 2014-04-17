@@ -1,22 +1,9 @@
-/*
-Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
-reserved.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; version 2 of
-the License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA
-*/
+/*******************************************************************************
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2 of
+ * the License.
+ *******************************************************************************/
 #include "value.h"
 #include "binlog_event.h"
 #include <iomanip>
@@ -204,10 +191,11 @@ Value &Value::operator=(const Value &val)
 
 bool Value::operator==(const Value &val) const
 {
-  return (m_size == val.m_size) &&
-         (m_storage == val.m_storage) &&
+  return (m_is_null && val.m_is_null) || 
+         ( (m_size == val.m_size) &&
          (m_type == val.m_type) &&
-         (m_metadata == val.m_metadata);
+         (m_metadata == val.m_metadata) &&
+         (0 == memcmp(m_storage, val.m_storage, m_size<=val.m_size?m_size:val.m_size)) );
 }
 
 bool Value::operator!=(const Value &val) const

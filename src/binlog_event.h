@@ -1,26 +1,14 @@
-/*
-Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
-reserved.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; version 2 of
-the License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA
-*/
+/*******************************************************************************
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2 of
+ * the License.
+ *******************************************************************************/
 #ifndef BINLOG_EVENT_INCLUDED
 #define	BINLOG_EVENT_INCLUDED
 
 #include <stdint.h>
+#include "ref_count.h"
 #ifdef min //definition of min() and max() in std and libmysqlclient
            //can be/are different
 #undef min
@@ -156,7 +144,7 @@ class Binary_log_event;
 /**
  * TODO Base class for events. Implementation is in body()
  */
-class Binary_log_event
+class Binary_log_event : public Ref_count
 {
 public:
     Binary_log_event()
@@ -195,6 +183,7 @@ public:
      * Return a pointer to the header of the log event
      */
     Log_event_header *header() { return &m_header; }
+    const Log_event_header *header() const { return &m_header; }
 
 private:
     Log_event_header m_header;

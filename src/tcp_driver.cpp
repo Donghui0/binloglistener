@@ -1,22 +1,9 @@
-/*
-Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
-reserved.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; version 2 of
-the License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA
-*/
+/*******************************************************************************
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2 of
+ * the License.
+ *******************************************************************************/
 
 #include "tcp_driver.h"
 #include "binlog_api.h"
@@ -112,13 +99,15 @@ int Binlog_tcp_driver::connect(const std::string& user,
                                size_t offset)
 {
   m_mysql= mysql_init(NULL);
+  bool reconnect = false;
+  mysql_options(m_mysql, MYSQL_OPT_RECONNECT, &reconnect);
 
   if (!m_mysql)
     return ERR_FAIL;
 
   int err= sync_connect_and_authenticate(m_mysql, user, passwd, host, port, offset);
   if (err != ERR_OK)
-    return err;
+    return mysql_close(m_mysql), err;
 
   const char *binlog_file= "";
   if (binlog_filename != "" || offset > 4)
@@ -184,15 +173,16 @@ int sync_connect_and_authenticate(MYSQL *conn, const std::string &user,
         || !(res= mysql_store_result(conn)))
       return ERR_CHECKSUM_QUERY_FAIL;
 
-    if (!(row= mysql_fetch_row(res)))
-      return ERR_CHECKSUM_QUERY_FAIL;
+    if (!(row= mysql_fetch_row(res))) 
+      return mysql_free_result(res), ERR_CHECKSUM_QUERY_FAIL;
 
-    if (!(checksum= row[0]))
-      return ERR_CHECKSUM_QUERY_FAIL;
+    if (!(checksum= row[0])) 
+      return mysql_free_result(res), ERR_CHECKSUM_QUERY_FAIL;
 
     checksum= row[1];
-    if (strcmp(checksum, "NONE") != 0)
-      return ERR_CHECKSUM_ENABLED;
+    if (strcmp(checksum, "NONE") != 0) 
+      return mysql_free_result(res), ERR_CHECKSUM_ENABLED;
+    mysql_free_result(res);
   }//end if version 5.6
 
   int4store(pos, server_id); pos+= 4;
@@ -257,9 +247,9 @@ int Binlog_tcp_driver::wait_for_next_event(mysql::Binary_log_event **event_ptr)
      return ERR_FAIL;
   }
   std::istringstream is(std::string((char*)m_mysql->net.buff, len));
-  m_waiting_event= new Log_event_header();
-  proto_event_packet_header(is, m_waiting_event);
-  *event_ptr= parse_event(is, m_waiting_event);
+  // m_waiting_event= new Log_event_header();
+  proto_event_packet_header(is, &m_waiting_event);
+  *event_ptr= parse_event(is, &m_waiting_event);
   if (*event_ptr)
   {
     if ((*event_ptr)->header()->type_code == mysql::FORMAT_DESCRIPTION_EVENT)
@@ -293,7 +283,7 @@ void Binlog_tcp_driver::reconnect()
 
 int Binlog_tcp_driver::disconnect()
 {
-  m_waiting_event= 0;
+  //m_waiting_event= 0;
   mysql_close(m_mysql);
   return ERR_OK;
 }
@@ -313,7 +303,7 @@ int Binlog_tcp_driver::set_position(const std::string &str, ulong position)
     return ERR_FAIL;
   int err= sync_connect_and_authenticate(mysql, m_user, m_passwd, m_host, m_port);
   if (err != ERR_OK)
-    return err;
+    return mysql_close(mysql), err;
 
   std::map<std::string, unsigned long> binlog_map;
   if (fetch_binlog_name_and_size(mysql, &binlog_map))
@@ -340,7 +330,7 @@ int Binlog_tcp_driver::get_position(std::string *filename_ptr,
     return ERR_FAIL;  
   int err= sync_connect_and_authenticate(mysql, m_user, m_passwd, m_host, m_port);
   if (err != ERR_OK)
-    return err;
+    return mysql_close(mysql), err;
 
   if (fetch_master_status(mysql, &m_binlog_file_name, &m_binlog_offset))
     return ERR_MYSQL_QUERY_FAIL;
@@ -384,7 +374,7 @@ bool fetch_binlog_name_and_size(MYSQL *mysql, std::map<std::string, unsigned lon
     filename= row[0];
     position= strtoul(row[1], NULL, 0);
     (*binlog_map).insert(std::make_pair<std::string, unsigned long>(filename, position));
-  }
+  }  mysql_free_result(res);
   return ERR_OK;
 }
 }} // end namespace mysql::system

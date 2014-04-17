@@ -1,22 +1,9 @@
-/*
-Copyright (c) 2003, 2011, 2013, Oracle and/or its affiliates. All rights
-reserved.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; version 2 of
-the License.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-02110-1301  USA
-*/
+/*******************************************************************************
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; version 2 of
+ * the License.
+ *******************************************************************************/
 
 #ifndef TCP_DRIVER_INCLUDED
 #define	TCP_DRIVER_INCLUDED
@@ -45,15 +32,16 @@ public:
 
     Binlog_tcp_driver(const std::string& user, const std::string& passwd,
                       const std::string& host, uint port)
-      : Binary_log_driver("", 4), m_shutdown(false), m_waiting_event(0), m_host(host), m_user(user), m_passwd(passwd),
-        m_port(port), 
+      : Binary_log_driver("", 4), m_shutdown(false), /*m_waiting_event(0),*/ m_host(host), m_user(user), m_passwd(passwd),
+        m_port(port), m_mysql(NULL),
         m_total_bytes_transferred(0)
     {
     }
 
     virtual ~Binlog_tcp_driver()
     {
-      delete m_mysql;
+      if (m_mysql) {
+       mysql_close(m_mysql); m_mysql=NULL;}
     }
 
     /**
@@ -147,7 +135,7 @@ private:
      * server. If it is 0 it means that no event has been
      * constructed yet.
      */
-    Log_event_header *m_waiting_event;
+    Log_event_header m_waiting_event;
     Log_event_header m_log_event_header;
 
     std::string m_host;
