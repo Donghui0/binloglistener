@@ -15,6 +15,7 @@
 #define REF_COUNT_H_
 
 #include <alsa/iatomic.h>
+
 namespace mysql {
 
 class Ref_count {
@@ -28,8 +29,7 @@ public:
 		atomic_inc(&m_count);
 	}
 	void release() {
-		atomic_dec(&m_count);
-		if (m_count.counter == 0) {
+		if (atomic_dec_and_test(&m_count)) {
 			delete this;
 		}
 	}
@@ -37,8 +37,7 @@ public:
 		atomic_inc(&m_count);
 	}
 	void release() const {
-		atomic_dec(&m_count);
-		if (m_count.counter == 0) {
+		if (atomic_dec_and_test(&m_count)) {
 			delete this;
 		}
 	}
