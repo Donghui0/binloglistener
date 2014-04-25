@@ -8,7 +8,6 @@
 #define	BINLOG_EVENT_INCLUDED
 
 #include <stdint.h>
-#include "ref_count.h"
 #ifdef min //definition of min() and max() in std and libmysqlclient
            //can be/are different
 #undef min
@@ -144,7 +143,7 @@ class Binary_log_event;
 /**
  * TODO Base class for events. Implementation is in body()
  */
-class Binary_log_event : public Ref_count
+class Binary_log_event
 {
 public:
     Binary_log_event()

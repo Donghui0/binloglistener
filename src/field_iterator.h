@@ -41,7 +41,7 @@ public:
       m_field_offset= 0;
   }
 
-  Iterator_value_type operator*();
+  Iterator_value_type* operator*();
 
   Row_event_iterator& operator++();
 
@@ -102,13 +102,13 @@ uint32_t Row_event_iterator<Iterator_value_type>::
 }
 
 template <class Iterator_value_type >
-Iterator_value_type Row_event_iterator<Iterator_value_type>::operator*()
+Iterator_value_type* Row_event_iterator<Iterator_value_type>::operator*()
 { // dereferencing
-  Iterator_value_type fields_vector;
+  Iterator_value_type* fields_vector = new Iterator_value_type();
   /*
    * Remember this offset if we need to increate the row pointer
    */
-  m_new_field_offset_calculated= fields(fields_vector);
+  m_new_field_offset_calculated= fields(*fields_vector);
   return fields_vector;
 }
 

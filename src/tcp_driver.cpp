@@ -100,8 +100,9 @@ int Binlog_tcp_driver::connect(const std::string& user,
 {
   m_mysql= mysql_init(NULL);
   bool reconnect = false;
+  int timeout = 5;
   mysql_options(m_mysql, MYSQL_OPT_RECONNECT, &reconnect);
-
+  mysql_options(m_mysql, MYSQL_OPT_READ_TIMEOUT, &timeout);
   if (!m_mysql)
     return ERR_FAIL;
 

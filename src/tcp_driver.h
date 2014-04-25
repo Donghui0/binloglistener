@@ -41,7 +41,8 @@ public:
     virtual ~Binlog_tcp_driver()
     {
       if (m_mysql) {
-       mysql_close(m_mysql); m_mysql=NULL;}
+       mysql_close(m_mysql); m_mysql=NULL;
+       mysql_thread_end();}
     }
 
     /**
