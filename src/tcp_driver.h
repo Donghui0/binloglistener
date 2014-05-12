@@ -75,6 +75,16 @@ public:
     const std::string& password() const { return m_passwd; }
     const std::string& host() const { return m_host; }
     uint port() const { return m_port; }
+    const std::string& uuid(const char* uuid) {
+    	if (uuid != NULL) m_uuid = uuid;
+    	return m_uuid;
+    }
+    int sid(const char* uuid) {
+    	if (uuid == NULL || strlen(uuid) <= 4) { return 1; }
+    	unsigned int sid = 0;
+    	for (int i=0;i<4;i++) sid += uuid[i];
+    	return sid % ((2L<<31)-1);
+    }
 
 protected:
     /**
@@ -145,6 +155,7 @@ private:
     uint m_port;
     MYSQL *m_mysql;
     uint64_t m_total_bytes_transferred;
+    std::string m_uuid;
 };
 
 /**

@@ -222,7 +222,7 @@ void Binlog_tcp_driver::start_binlog_dump(const char *binlog_name,
   uchar buf[1024];
   // char *binlog_pos;
   ushort binlog_flags= 0;
-  int server_id= 1;
+  int server_id= sid(m_uuid.c_str());
   size_t binlog_name_length;
   m_mysql->status= MYSQL_STATUS_READY;
   int4store(buf, long(offset));
@@ -230,6 +230,9 @@ void Binlog_tcp_driver::start_binlog_dump(const char *binlog_name,
   int4store(buf + 6, server_id);
   binlog_name_length= strlen(binlog_name);
   memcpy(buf + 10, binlog_name, binlog_name_length);
+  char tmp[1024];
+  size_t size = snprintf(tmp, 1024, "SET @slave_uuid= '%s'", m_uuid.c_str());
+  mysql_real_query(m_mysql, tmp, size);
   simple_command(m_mysql, COM_BINLOG_DUMP, buf, binlog_name_length + 10, 1);
 }
 
